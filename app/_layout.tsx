@@ -4,6 +4,7 @@ import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
 import "react-native-reanimated";
+import "../global.css";
 
 export {
   // Catch any errors thrown by the Layout component.
@@ -15,7 +16,11 @@ SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
-    SpaceMono: require("../assets/fonts/SpaceMono-Regular.ttf"),
+    "okra-regular": require("../assets/fonts/Okra-Regular.ttf"),
+    "okra-Bold": require("../assets/fonts/Okra-Bold.ttf"),
+    "okra-ExtraBold": require("../assets/fonts/Okra-ExtraBold.ttf"),
+    "okra-Medium": require("../assets/fonts/Okra-Medium.ttf"),
+    "okra-MediumLight": require("../assets/fonts/Okra-MediumLight.ttf"),
     ...FontAwesome.font,
   });
 
@@ -41,6 +46,20 @@ function RootLayoutNav() {
   return (
     <Stack>
       <Stack.Screen name="index" options={{ headerShown: false }} />
+      <Stack.Screen
+        name="otp"
+        options={{
+          headerTitle: "Enter Your Phone Number",
+          headerBackVisible: false,
+        }}
+      />
+      <Stack.Screen
+        name="verify/[phone]"
+        options={{
+          headerTitle: "Verify Your Phone Number",
+          headerBackTitle: "Edit Number",
+        }}
+      />
     </Stack>
   );
 }
