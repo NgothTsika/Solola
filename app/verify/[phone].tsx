@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import React, { useEffect, useState } from "react";
 import { Stack, useLocalSearchParams } from "expo-router";
 import {
@@ -7,6 +7,11 @@ import {
   useBlurOnFulfill,
   useClearByFocusCell,
 } from "react-native-confirmation-code-field";
+import {
+  isClerkAPIResponseError,
+  useSignIn,
+  useSignUp,
+} from "@clerk/clerk-expo";
 
 const CELL_COUNT = 6;
 
@@ -18,6 +23,9 @@ const Page = () => {
     value: code,
     setValue: setCode,
   });
+
+  const { signUp, setActive } = useSignUp();
+  const { signIn } = useSignIn();
 
   useEffect(() => {
     if (code.length === 6) {
@@ -33,7 +41,19 @@ const Page = () => {
     Stack.Screen.options = { headerTitle: phone };
   };
 
-  const verifySignIn = async () => {};
+  const verifySignIn = async () => {
+    try {
+      await signUp!.attemptPhoneNumberVerification({
+        code,
+      });
+      await setActive!({ session: signUp!.createdSessionId });
+    } catch (err) {
+      console.log("error", JSON.stringify(err, null, 2));
+      if (isClerkAPIResponseError(err)) {
+        Alert.alert("Error", err.errors[0].message);
+      }
+    }
+  };
 
   const resendCode = async () => {};
 

@@ -7,12 +7,18 @@ import {
   ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
+  Alert,
 } from "react-native";
 import React, { useState } from "react";
 import PhoneInput from "react-native-phone-number-input";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { getCountryCallingCode, CountryCode } from "libphonenumber-js";
+import {
+  isClerkAPIResponseError,
+  useSignIn,
+  useSignUp,
+} from "@clerk/clerk-expo";
 
 const otp = () => {
   const [loading, setLoading] = useState(false);
@@ -22,6 +28,8 @@ const otp = () => {
   const router = useRouter();
   const KeyboarderVerticalOffest = Platform.OS === "ios" ? 90 : 0;
   const { bottom } = useSafeAreaInsets();
+  const { signUp, setActive } = useSignUp();
+  const { signIn } = useSignIn();
 
   const formatPhoneNumber = (number: string) => {
     return number.replace(/(\d{3})(?=\d)/g, "$1 ");
@@ -40,6 +48,47 @@ const otp = () => {
       setLoading(false);
       router.push(`/verify/${fullPhoneNumber}`);
     }, 2000);
+
+    try {
+      await signUp!.create({
+        phoneNumber,
+      });
+      signUp!.preparePhoneNumberVerification();
+      router.push(`/verify/[phone]`);
+    } catch (err) {
+      console.log(err);
+      if (isClerkAPIResponseError(err)) {
+        if (err.errors[0].code === "form_idetifier_exists") {
+          console.log("user exists");
+          await trySignIn();
+        } else {
+          setLoading(false);
+          Alert.alert("Error", err.errors[0].message);
+        }
+      }
+    }
+  };
+
+  const trySignIn = async () => {
+    console.log("trySignIn", phoneNumber);
+
+    const { supportedFirstFactors } = await signIn!.create({
+      identifier: phoneNumber,
+    });
+
+    const firstPhoneFactor: any = supportedFirstFactors.find((factor: any) => {
+      return factor.strategy === "phone_code";
+    });
+
+    const { phoneNumberId } = firstPhoneFactor;
+
+    await signIn!.prepareFirstFactor({
+      strategy: "phone_code",
+      phoneNumberId,
+    });
+
+    router.push(`/verify/${phoneNumber}?signin=true`);
+    setLoading(false);
   };
 
   return (
