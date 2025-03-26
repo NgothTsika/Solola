@@ -12,6 +12,7 @@ import React, { useState } from "react";
 import PhoneInput from "react-native-phone-number-input";
 import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { getCountryCallingCode, CountryCode } from "libphonenumber-js";
 
 const otp = () => {
   const [loading, setLoading] = useState(false);
@@ -28,9 +29,16 @@ const otp = () => {
 
   const sentOTP = async () => {
     setLoading(true);
+    const numericCountryCode = getCountryCallingCode(
+      countryCode as CountryCode
+    );
+    const fullPhoneNumber = `+${numericCountryCode} ${phoneNumber.replace(
+      /\s/g,
+      ""
+    )}`;
     setTimeout(() => {
       setLoading(false);
-      router.push(`/verify/${countryCode} ${phoneNumber}`);
+      router.push(`/verify/${fullPhoneNumber}`);
     }, 2000);
   };
 
@@ -79,8 +87,8 @@ const otp = () => {
             onChangeFormattedText={(phoneNumber) => {
               setFormattedValue(phoneNumber);
             }}
-            onChangeCountry={(callingCode) => {
-              setCountryCode(callingCode.callingCode[0]);
+            onChangeCountry={(country) => {
+              setCountryCode(country.cca2);
             }}
           />
 
@@ -104,7 +112,7 @@ const otp = () => {
           >
             <Text
               className={`text-gray-500 text-xl font-Okra-Medium text-black ${
-                phoneNumber !== "" ? "text-black" : null
+                phoneNumber !== "" ? "text-white" : null
               }`}
             >
               Next
