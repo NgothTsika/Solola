@@ -33,8 +33,8 @@ const otp = () => {
       countryCode as CountryCode
     );
     const fullPhoneNumber = `+${numericCountryCode} ${phoneNumber.replace(
-      /\s/g,
-      ""
+      /(\d{3})(?=\d)/g,
+      "$1 "
     )}`;
     setTimeout(() => {
       setLoading(false);
