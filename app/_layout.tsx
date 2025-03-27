@@ -3,14 +3,21 @@ import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useEffect } from "react";
+// import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import "react-native-reanimated";
 import "../global.css";
+import "dotenv/config";
 
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import * as SecureStore from "expo-secure-store";
-import { View } from "react-native";
-const CLERK_PUBLISHABLE_KEY = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY;
+import { Text, View } from "react-native";
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY!;
 
+if (!publishableKey) {
+  throw new Error(
+    "Missing Publishable Key. Please set EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY in your .env"
+  );
+}
 // Cache the JWT
 
 const tokenCache = {
@@ -74,8 +81,12 @@ const InitialLayout = () => {
     }
   }, [isSignedIn]);
 
-  if (!loaded || !isLoaded) {
-    return <View />;
+  if (!loaded) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Loading Clerk...</Text>
+      </View>
+    );
   }
 
   return (
@@ -102,7 +113,7 @@ const InitialLayout = () => {
 const RootLayoutNav = () => {
   return (
     <ClerkProvider
-      publishableKey={CLERK_PUBLISHABLE_KEY!}
+      publishableKey={publishableKey!} // Ensure this key is valid
       tokenCache={tokenCache}
     >
       <InitialLayout />

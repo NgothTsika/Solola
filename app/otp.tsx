@@ -20,6 +20,21 @@ import {
   useSignUp,
 } from "@clerk/clerk-expo";
 
+const GER_PHONE = [
+  /\d/,
+  /\d/,
+  " ",
+  /\d/,
+  /\d/,
+  /\d/,
+  " ",
+  /\d/,
+  /\d/,
+  " ",
+  /\d/,
+  /\d/,
+];
+
 const otp = () => {
   const [loading, setLoading] = useState(false);
   const [phoneNumber, SetPhoneNumber] = useState("");
@@ -34,38 +49,39 @@ const otp = () => {
   const formatPhoneNumber = (number: string) => {
     return number.replace(/(\d{3})(?=\d)/g, "$1 ");
   };
-
   const sentOTP = async () => {
+    if (!signUp) {
+      console.error("signUp is undefined. Ensure Clerk is initialized.");
+      return;
+    }
+
     setLoading(true);
     const numericCountryCode = getCountryCallingCode(
       countryCode as CountryCode
     );
-    const fullPhoneNumber = `+${numericCountryCode} ${phoneNumber.replace(
-      /(\d{3})(?=\d)/g,
-      "$1 "
+    const fullPhoneNumber = `+${numericCountryCode}${phoneNumber.replace(
+      /\s/g,
+      ""
     )}`;
-    setTimeout(() => {
-      setLoading(false);
-      router.push(`/verify/${fullPhoneNumber}`);
-    }, 2000);
 
     try {
-      await signUp!.create({
-        phoneNumber,
+      await signUp.create({
+        phoneNumber: fullPhoneNumber,
       });
-      signUp!.preparePhoneNumberVerification();
-      router.push(`/verify/[phone]`);
+      await signUp.preparePhoneNumberVerification();
+      router.push(`/verify/${fullPhoneNumber}`);
     } catch (err) {
-      console.log(err);
+      console.error("Error during sign-up:", err);
       if (isClerkAPIResponseError(err)) {
-        if (err.errors[0].code === "form_idetifier_exists") {
-          console.log("user exists");
+        if (err.errors[0].code === "form_identifier_exists") {
+          console.log("User exists. Trying sign-in...");
           await trySignIn();
         } else {
-          setLoading(false);
           Alert.alert("Error", err.errors[0].message);
         }
       }
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -129,7 +145,7 @@ const otp = () => {
             value={phoneNumber}
             onChangeText={(phoneNumber) => {
               const formattedNumber = formatPhoneNumber(
-                phoneNumber.replace(/\s/g, "")
+                phoneNumber.replace(/\s/g, " ")
               );
               SetPhoneNumber(formattedNumber);
             }}

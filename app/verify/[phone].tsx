@@ -16,37 +16,61 @@ import {
 const CELL_COUNT = 6;
 
 const Page = () => {
-  const { phone } = useLocalSearchParams<{ phone: string }>();
+  const { phone, signin } = useLocalSearchParams<{
+    phone: string;
+    signin: string;
+  }>();
   const [code, setCode] = useState("");
+
   const ref = useBlurOnFulfill({ value: code, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value: code,
     setValue: setCode,
   });
-
   const { signUp, setActive } = useSignUp();
   const { signIn } = useSignIn();
 
   useEffect(() => {
     if (code.length === 6) {
-      console.log("code", code);
+      console.log("verify", code);
+
+      if (signin === "true") {
+        console.log("signin");
+        veryifySignIn();
+      } else {
+        verifyCode();
+      }
     }
   }, [code]);
 
   const verifyCode = async () => {
-    // Add your verification logic here
-    console.log("Verifying code:", code);
-    console.log("Phone number:", phone);
-    // Update the headerTitle with the phone number
-    Stack.Screen.options = { headerTitle: phone };
-  };
+    if (!signUp) {
+      console.error("signUp is undefined. Ensure Clerk is initialized.");
+      return;
+    }
 
-  const verifySignIn = async () => {
     try {
-      await signUp!.attemptPhoneNumberVerification({
+      await signUp.attemptPhoneNumberVerification({
         code,
       });
-      await setActive!({ session: signUp!.createdSessionId });
+      await setActive({ session: signUp.createdSessionId });
+      console.log("Phone number verified successfully!");
+    } catch (err) {
+      console.error("Error during verification:", err);
+      if (isClerkAPIResponseError(err)) {
+        Alert.alert("Error", err.errors[0].message);
+      }
+    }
+  };
+
+  const veryifySignIn = async () => {
+    try {
+      await signIn!.attemptFirstFactor({
+        strategy: "phone_code",
+        code,
+      });
+
+      await setActive!({ session: signIn!.createdSessionId });
     } catch (err) {
       console.log("error", JSON.stringify(err, null, 2));
       if (isClerkAPIResponseError(err)) {
@@ -55,7 +79,38 @@ const Page = () => {
     }
   };
 
-  const resendCode = async () => {};
+  const resendCode = async () => {
+    try {
+      if (signin === "true") {
+        const { supportedFirstFactors } = await signIn!.create({
+          identifier: phone,
+        });
+
+        const firstPhoneFactor: any = supportedFirstFactors.find(
+          (factor: any) => {
+            return factor.strategy === "phone_code";
+          }
+        );
+
+        const { phoneNumberId } = firstPhoneFactor;
+
+        await signIn!.prepareFirstFactor({
+          strategy: "phone_code",
+          phoneNumberId,
+        });
+      } else {
+        await signUp!.create({
+          phoneNumber: phone,
+        });
+        signUp!.preparePhoneNumberVerification();
+      }
+    } catch (err) {
+      console.log("error", JSON.stringify(err, null, 2));
+      if (isClerkAPIResponseError(err)) {
+        Alert.alert("Error", err.errors[0].message);
+      }
+    }
+  };
 
   return (
     <View className="flex-1 items-center p-7 bg-background gap-5">
