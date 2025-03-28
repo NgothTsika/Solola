@@ -1,6 +1,6 @@
 import { View, Text, Image, TouchableOpacity } from "react-native";
 import React from "react";
-import WelcomImage from "../assets/images/welcome.png";
+import WelcomImage from "../assets/images/welcome.png"; // Ensure the file exists in the specified path
 import { Link } from "expo-router";
 
 const Page = () => {

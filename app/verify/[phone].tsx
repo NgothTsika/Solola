@@ -16,47 +16,32 @@ import {
 const CELL_COUNT = 6;
 
 const Page = () => {
-  const { phone, signin } = useLocalSearchParams<{
-    phone: string;
-    signin: string;
-  }>();
+  const { phone } = useLocalSearchParams<{ phone: string }>();
   const [code, setCode] = useState("");
-
   const ref = useBlurOnFulfill({ value: code, cellCount: CELL_COUNT });
   const [props, getCellOnLayoutHandler] = useClearByFocusCell({
     value: code,
     setValue: setCode,
   });
+
   const { signUp, setActive } = useSignUp();
   const { signIn } = useSignIn();
 
   useEffect(() => {
     if (code.length === 6) {
-      console.log("verify", code);
-
-      if (signin === "true") {
-        console.log("signin");
-        veryifySignIn();
-      } else {
-        verifyCode();
-      }
+      console.log("code", code);
     }
   }, [code]);
 
   const verifyCode = async () => {
-    if (!signUp) {
-      console.error("signUp is undefined. Ensure Clerk is initialized.");
-      return;
-    }
-
     try {
-      await signUp.attemptPhoneNumberVerification({
+      await signUp!.attemptPhoneNumberVerification({
         code,
       });
-      await setActive({ session: signUp.createdSessionId });
-      console.log("Phone number verified successfully!");
+
+      await setActive!({ session: signUp!.createdSessionId });
     } catch (err) {
-      console.error("Error during verification:", err);
+      console.log("error", JSON.stringify(err, null, 2));
       if (isClerkAPIResponseError(err)) {
         Alert.alert("Error", err.errors[0].message);
       }

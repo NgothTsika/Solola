@@ -6,7 +6,7 @@ import { useEffect } from "react";
 // import { tokenCache } from "@clerk/clerk-expo/token-cache";
 import "react-native-reanimated";
 import "../global.css";
-import "dotenv/config";
+// import "dotenv/config";
 
 import { ClerkProvider, useAuth } from "@clerk/clerk-react";
 import * as SecureStore from "expo-secure-store";

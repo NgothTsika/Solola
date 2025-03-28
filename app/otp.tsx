@@ -20,21 +20,6 @@ import {
   useSignUp,
 } from "@clerk/clerk-expo";
 
-const GER_PHONE = [
-  /\d/,
-  /\d/,
-  " ",
-  /\d/,
-  /\d/,
-  /\d/,
-  " ",
-  /\d/,
-  /\d/,
-  " ",
-  /\d/,
-  /\d/,
-];
-
 const otp = () => {
   const [loading, setLoading] = useState(false);
   const [phoneNumber, SetPhoneNumber] = useState("");
@@ -55,33 +40,13 @@ const otp = () => {
       return;
     }
 
-    setLoading(true);
-    const numericCountryCode = getCountryCallingCode(
-      countryCode as CountryCode
-    );
-    const fullPhoneNumber = `+${numericCountryCode}${phoneNumber.replace(
-      /\s/g,
-      ""
-    )}`;
-
     try {
       await signUp.create({
-        phoneNumber: fullPhoneNumber,
+        phoneNumber: "+1234567890",
       });
-      await signUp.preparePhoneNumberVerification();
-      router.push(`/verify/${fullPhoneNumber}`);
+      console.log("Sign-up successful!");
     } catch (err) {
       console.error("Error during sign-up:", err);
-      if (isClerkAPIResponseError(err)) {
-        if (err.errors[0].code === "form_identifier_exists") {
-          console.log("User exists. Trying sign-in...");
-          await trySignIn();
-        } else {
-          Alert.alert("Error", err.errors[0].message);
-        }
-      }
-    } finally {
-      setLoading(false);
     }
   };
 
